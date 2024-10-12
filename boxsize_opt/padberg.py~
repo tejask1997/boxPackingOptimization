@@ -1,0 +1,49 @@
+import pulp
+
+# the function
+def padberg_check(order: List[Product], box: Box) -> bool:
+  prob = pulp.LpProblem("Padberg", LpMaximize)
+
+  H = ('X', 'Y', 'Z')
+  alpha = range(3)
+
+  # Decision variables representing alignment of products in box
+  delta_idxs = [tuple(c) for c in pulp.allcombinations(H, alpha, order)]
+  delta = pulp.LpVariable.dicts("delta", delta_idxs, lowBound=0, upBound=1,
+                                cat=pulp.LpInteger)
+  
+  # Coordinates of centres of gravity for each product
+  x_idxs = [tuple(c) for c in pulp.allcombinations(order, H)]
+  x = pulp.LpVariable.dicts("x", x_idxs, lowBound=0)
+
+  D = {'X': box.boxDepth, 'Y': box.boxWidth, 'Z': box.boxHeight}
+
+  for (i,p) in enumerate(order):
+    # Orthogonal placement constraints: ensure
+    # that if we assign one dimension of product to X, Y, or Z,
+    # then we must assign other two dimensions. If we don't assign
+    # first dimension of a product, then we don't assign any others
+    prob += (
+      delta['X', 0, p] + delta['Y', 0, p] + delta['Z', 0, p] <= 1.0,
+      f"Product {i} - Orthogonal Placement 1")
+    prob +=(
+      delta['X', 1, p] + delta['Y', 1, p] + delta['Z', 1, p] == delta['X', 0, p] + delta['Y', 0, p] + delta['Z', 0, p],
+      f"Product {i} - Orthogonal Placement 2")
+    for h in H:
+      prob +=(
+        lpSum(delta[h, j, p] for j in alpha) == delta['X', 0, p] + delta['Y', 0, p] + delta['Z', 0, p],
+        f"Product {i} - Orthogonal Placement 3 - {h}")
+      
+    # Domain constraints
+    l = (p.productDepth/2, p.productWidth/2, p.productHeight/2)
+    for h in H:
+      prob += (
+        x[p, h] >= lpSum(l[j]*delta[h,j,p] for j in alpha),
+        f"Product {i} - Domain Constraints - Lower {h}")
+      prob += (
+        x[p, h] <= lpSum((D[h] - l[j])*delta[h,j,p] for j in alpha),
+        f"Product {i} - Domain Constraints - Upper {h}")
+
+      
+    
+  return True

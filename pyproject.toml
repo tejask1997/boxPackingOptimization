@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "boxsize-opt"
+version = "0.1.0"
+description = ""
+authors = ["Tejas Khandale <tejask1997@gmail.com>"]
+readme = "README.md"
+packages = [{include = "boxsize_opt"}]
+
+[tool.poetry.dependencies]
+python = "^3.10.1"
+pandas = "^2.0.2"
+pulp = "^2.7.0"
+highspy = "^1.5.3"
+gurobipy = "^10.0.2"
+matplotlib = "^3.7.2"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.23.2"
+pytest = "^7.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
